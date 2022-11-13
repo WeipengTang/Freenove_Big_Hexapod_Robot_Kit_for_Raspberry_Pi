@@ -8,39 +8,48 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from Server import *
 from Control import *
+from controller_server import *
 
 class MyWindow(QMainWindow,Ui_server):
     def __init__(self):
         self.user_ui=True
         self.start_tcp=False
-        self.server=Server()
+        self.use_controller=False
         self.parseOpt()
-        if self.user_ui:
-            self.app = QApplication(sys.argv)
-            super(MyWindow,self).__init__()
-            self.setupUi(self)
-            self.pushButton_On_And_Off.clicked.connect(self.on_and_off_server)
-            self.on_and_off_server()
-        if self.start_tcp:
-            self.server.turn_on_server()
-            self.server.tcp_flag=True
-            self.video=threading.Thread(target=self.server.transmission_video)
-            self.video.start()
-            self.instruction=threading.Thread(target=self.server.receive_instruction)
-            self.instruction.start()
+        if not self.use_controller:
+            self.server=Server()
             if self.user_ui:
-                self.pushButton_On_And_Off.setText('Off')
-                self.states.setText('On')
+                self.app = QApplication(sys.argv)
+                super(MyWindow,self).__init__()
+                self.setupUi(self)
+                self.pushButton_On_And_Off.clicked.connect(self.on_and_off_server)
+                self.on_and_off_server()
+            if self.start_tcp:
+                self.server.turn_on_server()
+                self.server.tcp_flag=True
+                self.video=threading.Thread(target=self.server.transmission_video)
+                self.video.start()
+                self.instruction=threading.Thread(target=self.server.receive_instruction)
+                self.instruction.start()
+                if self.user_ui:
+                    self.pushButton_On_And_Off.setText('Off')
+                    self.states.setText('On')
+        else:
+            self.ps4_control = Controller_server()
             
         
         
     def parseOpt(self):
-        self.opts,self.args = getopt.getopt(sys.argv[1:],"tn")
+        self.opts,self.args = getopt.getopt(sys.argv[1:],"tnc")
         for o,a in self.opts:
             if o in ('-t'):
                 print ("Open TCP")
                 self.start_tcp=True
             elif o in ('-n'):
+                self.user_ui=False
+            elif o in ('-c'):
+                self.use_controller=True
+                self.start_tcp=False
                 self.user_ui=False
                 
     def on_and_off_server(self):
