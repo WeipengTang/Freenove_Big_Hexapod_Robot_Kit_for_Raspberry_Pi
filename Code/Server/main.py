@@ -15,6 +15,7 @@ class MyWindow(QMainWindow,Ui_server):
         self.user_ui=True
         self.start_tcp=False
         self.use_controller=False
+        self.self_host=False
         self.parseOpt()
         if not self.use_controller:
             self.server=Server()
@@ -25,6 +26,7 @@ class MyWindow(QMainWindow,Ui_server):
                 self.pushButton_On_And_Off.clicked.connect(self.on_and_off_server)
                 self.on_and_off_server()
             if self.start_tcp:
+                self.server.self_host = self.self_host
                 self.server.turn_on_server()
                 self.server.tcp_flag=True
                 self.video=threading.Thread(target=self.server.transmission_video)
@@ -38,7 +40,7 @@ class MyWindow(QMainWindow,Ui_server):
             self.ps4_control = Controller_server()
         
     def parseOpt(self):
-        self.opts,self.args = getopt.getopt(sys.argv[1:],"tnc")
+        self.opts,self.args = getopt.getopt(sys.argv[1:],"tncs")
         for o,a in self.opts:
             if o in ('-t'):
                 print ("Open TCP")
@@ -49,6 +51,8 @@ class MyWindow(QMainWindow,Ui_server):
                 self.use_controller=True
                 self.start_tcp=False
                 self.user_ui=False
+            elif o in ('-s'):
+                self.self_host = True
                 
     def on_and_off_server(self):
         if self.pushButton_On_And_Off.text() == 'On':

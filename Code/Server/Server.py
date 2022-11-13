@@ -18,6 +18,7 @@ from Command import COMMAND as cmd
 class Server:
     def __init__(self):
         self.tcp_flag=False
+        self.self_host=False
         self.led=Led()
         self.adc=ADC()
         self.servo=Servo()
@@ -33,7 +34,10 @@ class Server:
                                             )[20:24])
     def turn_on_server(self):
         #ip adress
-        HOST=self.get_interface_ip()
+        if not self.self_host:
+            HOST=self.get_interface_ip()
+        else:
+            HOST='127.0.0.1'
         #Port 8002 for video transmission
         self.server_socket = socket.socket()
         self.server_socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEPORT,1)
