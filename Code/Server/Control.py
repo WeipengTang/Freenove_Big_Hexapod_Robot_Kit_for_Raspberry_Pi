@@ -355,7 +355,7 @@ class Control:
     def run(self,data,Z=40,F=64):#example : data=['CMD_MOVE', '1', '0', '25', '10', '0']
         
         #debug
-        start_time = time.time()
+        # start_time = time.time()
         
         gait=data[1]
         x=self.restriction(int(data[2]),-35,35)
@@ -442,8 +442,8 @@ class Control:
                     aa+=1
         
         #debug
-        end_time = time.time()
-        print(end_time - start_time)
+        # end_time = time.time()
+        # print(end_time - start_time)
                   
                              
 if __name__=='__main__':
