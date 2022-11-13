@@ -18,16 +18,24 @@ class Controller_server:
         self.relax_flag=False
         self.buzzer=Buzzer()
         self.control=Control()
+        self.speed = 10
         self.sonic=Ultrasonic()
         self.control.Thread_conditiona.start()
-        self.ps4Cont = Ps4Controller(self.controlCallBack)
-        # self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.LTHUMBX, self.leftThumbX)
-        # self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.LTHUMBY, self.leftThumbY)
+        self.ps4Cont = Ps4Controller()
+
         self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.cross, self.callback_buzzer)
         self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.square, self.callback_power)
         self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.triangle, self.callback_led)
         self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.circle, self.callback_relax)
-        self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.DPAD, self.callback_move_0_0)
+        self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.DPAD, self.callback_move)
+        self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.L2, self.callback_rotate_ccw)
+        self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.R2, self.callback_rotate_cw)
+        self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.L1, self.callback_speed_down)
+        self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.R1, self.callback_speed_up)
+        self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.RTHUMBX, self.callback_head_pan)
+        self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.RTHUMBY, self.callback_head_tilt)
+        self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.options, self.callback_exit)
+        
         try:
             # start the controller
             self.ps4Cont.start()
@@ -46,10 +54,24 @@ class Controller_server:
             raise
 
         finally:
-            stop_thread(self.thread_led)
+            try:
+                stop_thread(self.thread_led)
+            except:
+                pass
+            
+            try:
+                stop_thread(self.control.Thread_conditiona)
+            except:
+                pass
             # stop the controller
-            self.ps4Cont.stop()
+            try:
+                self.ps4Cont.stop()
+            except:
+                pass
+            GPIO.output(self.control.GPIO_4,True)
             self.end_sound()
+            sys.exit("Exiting...")
+
                 
     # generic call back
     def controlCallBack(self, ps4ControlId, value):
@@ -67,10 +89,7 @@ class Controller_server:
             print("B1:{} B2:{}".format(batteryVoltage[0], batteryVoltage[1]))
             if batteryVoltage[0] < 5.5 or batteryVoltage[1]<6:
                 for i in range(3):
-                    self.buzzer.run("1")
-                    time.sleep(0.15)
-                    self.buzzer.run("0")
-                    time.sleep(0.1)
+                    self.short_beep()
     
     def callback_led(self, value):
         if value == 0:
@@ -94,38 +113,131 @@ class Controller_server:
                 
     def callback_relax(self, value):
         if value == 0:
-            # if self.control.relax_flag==False:
-            #     self.control.relax(True)
-            #     self.control.relax_flag=True
-            # else:
-            #     self.control.relax(False)
-            #     self.control.relax_flag=False
-            if self.relax_flag == False:
+            if self.control.relax_flag==False:
                 GPIO.output(self.control.GPIO_4,True)
-                self.relax_flag = True
+                self.control.relax(True)
+                self.control.relax_flag=True
                 print("relaxed")
             else:
                 GPIO.output(self.control.GPIO_4,False)
-                self.relax_flag = False
+                self.control.relax(False)
+                self.control.relax_flag=False
+                print("ready")
+            # if self.relax_flag == False:
+            #     GPIO.output(self.control.GPIO_4,True)
+            #     self.relax_flag = True
+            #     print("relaxed")
+            # else:
+            #     GPIO.output(self.control.GPIO_4,False)
+            #     self.relax_flag = False
+            #     print("ready")
     
-    def callback_move_0_0(self, value):
-        directionX=str(value[0] * 35)
-        directionY=str(value[1] * 35)
-        cmd = ["CMD_MOVE", "1", directionX, directionY, "10", "0"]
+    def callback_move(self, value):
+        directionX = str(value[0] * 35)
+        directionY = str(value[1] * 35)
+        speed = str(self.speed)
+        cmd = ["CMD_MOVE", "1", directionX, directionY, speed, "0"]
         self.control.order = cmd
         self.control.timeout = time.time()
         print(cmd)
+        
+    def callback_rotate_cw(self, value):
+        speed = str(self.speed)
+        if value == 0:
+            cmd = ["CMD_MOVE", "1", "0", "0", speed, "0"]
+        else:
+            cmd = ["CMD_MOVE", "1", "35", "0", speed, "10"]
+        self.control.order = cmd
+        self.control.timeout = time.time()
+        print(cmd)
+    
+    def callback_rotate_ccw(self, value):
+        speed = str(self.speed)
+        if value == 0:
+            cmd = ["CMD_MOVE", "1", "0", "0", speed, "0"]
+        else:
+            cmd = ["CMD_MOVE", "1", "-35", "0", speed, "-10"]
+        self.control.order = cmd
+        self.control.timeout = time.time()
+        print(cmd)
+        
+    def callback_speed_up(self, value):
+        if value == 0:
+            if self.speed >= 10:
+                self.speed = 10
+                self.long_beep()
+            else:
+                self.speed += 1
+                self.short_beep()
+    
+    def callback_speed_down(self, value):
+        if value == 0:
+            if self.speed <= 2:
+                self.speed = 2
+                self.long_beep()
+            else:
+                self.speed -= 1
+                self.short_beep()
                 
-    def start_sound(self):
+    def callback_head_pan(self, value):
+        value *= -1
+        if value > 100:
+            value = 100.0
+        if value < -100:
+            value = -100.0
+        
+        angle = translate(value, -100.0, 100.0, 30, 160)
+        self.servo.setServoAngle(1, int(angle))
+        print(angle)
+    
+    def callback_head_tilt(self, value):
+        if value > 100:
+            value = 100.0
+        if value < -100:
+            value = -100.0
+        
+        angle = translate(value, -100.0, 100.0, 20, 160)
+        if angle < 50:
+            angle = 50
+        self.servo.setServoAngle(0, int(angle))
+        print(angle)
+        
+    def callback_exit(self, value):
+        if value == 0:
+            try:
+                stop_thread(self.thread_led)
+            except:
+                pass
+            
+            try:
+                stop_thread(self.control.Thread_conditiona)
+            except:
+                pass
+            # stop the controller
+            try:
+                self.ps4Cont.stop()
+            except:
+                pass
+            GPIO.output(self.control.GPIO_4,True)
+            self.end_sound()
+            sys.exit("Exiting...")
+                
+    def long_beep(self):
         self.buzzer.run("1")
         time.sleep(0.45)
         self.buzzer.run("0")
         time.sleep(0.1)
+        
+    def short_beep(self):
+        self.buzzer.run("1")
+        time.sleep(0.15)
+        self.buzzer.run("0")
+        time.sleep(0.1)
+                
+    def start_sound(self):
+        self.long_beep()
         for i in range(2):
-            self.buzzer.run("1")
-            time.sleep(0.15)
-            self.buzzer.run("0")
-            time.sleep(0.1)
+            self.short_beep()
     
     def end_sound(self):
         for i in range(2):
@@ -142,3 +254,14 @@ class Controller_server:
 
     def leftThumbY(self, yValue):
         print("LY {}".format(yValue))
+        
+def translate(value, leftMin, leftMax, rightMin, rightMax):
+    # Figure out how 'wide' each range is
+    leftSpan = leftMax - leftMin
+    rightSpan = rightMax - rightMin
+
+    # Convert the left range into a 0-1 range (float)
+    valueScaled = float(value - leftMin) / float(leftSpan)
+
+    # Convert the 0-1 range into a value in the right range.
+    return rightMin + (valueScaled * rightSpan)

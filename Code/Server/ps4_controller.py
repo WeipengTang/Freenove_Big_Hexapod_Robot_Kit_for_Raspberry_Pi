@@ -50,10 +50,10 @@ class Ps4Controller(threading.Thread):
     class Ps4Controls():
         LTHUMBX = 0
         LTHUMBY = 1
-        L2 = 2
+        LTRIGGER = 2
         RTHUMBX = 3
         RTHUMBY = 4
-        R2 = 5
+        RTRIGGER = 5
         cross = 6
         circle = 7
         triangle = 8
@@ -72,10 +72,10 @@ class Ps4Controller(threading.Thread):
     class PyGameAxis():
         LTHUMBX = 0
         LTHUMBY = 1
-        L2 = 2
+        LTRIGGER = 2
         RTHUMBX = 3
         RTHUMBY = 4
-        R2 = 5
+        RTRIGGER = 5
     
     class PyGameButtons():
         cross = 0
@@ -99,8 +99,8 @@ class Ps4Controller(threading.Thread):
                       PyGameAxis.RTHUMBY: Ps4Controls.RTHUMBY}
 
     # map between pygame axis (trigger) ids and ps4 control ids
-    TRIGGERCONTROLMAP = {PyGameAxis.R2: Ps4Controls.R2,
-                         PyGameAxis.L2: Ps4Controls.L2}
+    TRIGGERCONTROLMAP = {PyGameAxis.RTRIGGER: Ps4Controls.RTRIGGER,
+                         PyGameAxis.LTRIGGER: Ps4Controls.LTRIGGER}
 
     # map between pygame buttons ids and ps4 contorl ids
     BUTTONCONTROLMAP = {PyGameButtons.cross: Ps4Controls.cross,
@@ -121,9 +121,9 @@ class Ps4Controller(threading.Thread):
     def __init__(self,
                  controllerCallBack=None,
                  joystickNo=0,
-                 deadzone=0.1,
-                 scale=1,
-                 invertYAxis=False):
+                 deadzone=30,
+                 scale=100,
+                 invertYAxis=True):
 
         # setup threading
         threading.Thread.__init__(self)
@@ -143,6 +143,8 @@ class Ps4Controller(threading.Thread):
                               self.Ps4Controls.LTHUMBY: 0,
                               self.Ps4Controls.RTHUMBX: 0,
                               self.Ps4Controls.RTHUMBY: 0,
+                              self.Ps4Controls.LTRIGGER: 0,
+                              self.Ps4Controls.RTRIGGER: 0,
                               self.Ps4Controls.R1: 0,
                               self.Ps4Controls.L1: 0,
                               self.Ps4Controls.R2: 0,
@@ -177,6 +179,14 @@ class Ps4Controller(threading.Thread):
     @property
     def RTHUMBY(self):
         return self.controlValues[self.Ps4Controls.RTHUMBY]
+    
+    @property
+    def RTRIGGER(self):
+        return self.controlValues[self.Ps4Controls.RTRIGGER]
+
+    @property
+    def LTRIGGER(self):
+        return self.controlValues[self.Ps4Controls.LTRIGGER]
 
     @property
     def R2(self):
@@ -281,7 +291,6 @@ class Ps4Controller(threading.Thread):
                         self.updateControlValue(self.TRIGGERCONTROLMAP[event.axis],
                                                 self._sortOutTriggerValue(event.value))
                         
-
                 # d pad
                 elif event.type == JOYHATMOTION:
                     # update control value
@@ -294,6 +303,9 @@ class Ps4Controller(threading.Thread):
                         # update control value
                         self.updateControlValue(self.BUTTONCONTROLMAP[event.button],
                                                 self._sortOutButtonValue(event.type))
+                
+                else: 
+                    time.sleep(0.01)
 
     # stops the controller
     def stop(self):

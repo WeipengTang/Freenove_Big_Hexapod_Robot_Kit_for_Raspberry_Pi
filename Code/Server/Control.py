@@ -353,6 +353,10 @@ class Control:
             self.setLegAngle()
  
     def run(self,data,Z=40,F=64):#example : data=['CMD_MOVE', '1', '0', '25', '10', '0']
+        
+        #debug
+        start_time = time.time()
+        
         gait=data[1]
         x=self.restriction(int(data[2]),-35,35)
         y=self.restriction(int(data[3]),-35,35)
@@ -414,7 +418,7 @@ class Control:
                 self.coordinateTransformation(point)
                 self.setLegAngle()
                 time.sleep(delay)
-                
+                        
         elif gait=="2":
             aa=0
             number=[5,2,1,0,3,4]
@@ -436,6 +440,10 @@ class Control:
                     self.setLegAngle()
                     time.sleep(delay) 
                     aa+=1
+        
+        #debug
+        end_time = time.time()
+        print(end_time - start_time)
                   
                              
 if __name__=='__main__':

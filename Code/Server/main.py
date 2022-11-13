@@ -36,8 +36,6 @@ class MyWindow(QMainWindow,Ui_server):
                     self.states.setText('On')
         else:
             self.ps4_control = Controller_server()
-            
-        
         
     def parseOpt(self):
         self.opts,self.args = getopt.getopt(sys.argv[1:],"tnc")
@@ -99,3 +97,4 @@ if __name__ == '__main__':
             pass
         except KeyboardInterrupt:
             myshow.closeEvent(myshow)
+    sys.exit()
