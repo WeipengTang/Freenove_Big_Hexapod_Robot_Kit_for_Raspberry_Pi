@@ -155,8 +155,8 @@ class Controller_client:
             data = self.cat_move_cmd(1, 0 , 0, self.speed, 0)
         else:
             angle = self.leftThumbValues[0]/(math.sqrt(self.leftThumbValues[0]**2 + self.leftThumbValues[1]**2))
-            print([angle, self.leftThumbValues[0], self.leftThumbValues[1]])
-            # angle = translate(angle, -1, 1, -10, 10)
+            # print([angle, self.leftThumbValues[0], self.leftThumbValues[1]])
+            angle = translate(angle, -1, 1, -10, 10)
             if self.leftThumbValues[1] < 0:
                 angle *= -1
             xValue = translate(self.leftThumbValues[0], -100, 100, -50, 50)
