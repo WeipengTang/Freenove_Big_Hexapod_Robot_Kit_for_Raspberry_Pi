@@ -125,7 +125,7 @@ class Controller_client:
         if value == 0:
             data = self.cat_move_cmd(1, 0, 0, speed, 0)
         else:
-            data = self.cat_move_cmd(1, 35, 0, speed, 10)
+            data = self.cat_move_cmd(1, 35, 0, speed, 5)
         self.send_data(data)
         print(data)
     
@@ -134,7 +134,7 @@ class Controller_client:
         if value == 0:
             data = self.cat_move_cmd(1, 0, 0, speed, 0)
         else:
-            data = self.cat_move_cmd(1, -35, 0, speed, -10)
+            data = self.cat_move_cmd(1, -35, 0, speed, -5)
         self.send_data(data)
         print(data)
         

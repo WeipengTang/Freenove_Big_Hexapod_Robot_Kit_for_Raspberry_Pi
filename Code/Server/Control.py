@@ -10,6 +10,7 @@ from Servo import*
 import numpy as np
 import RPi.GPIO as GPIO
 from Command import COMMAND as cmd
+from typing import Final
 class Control:
     def __init__(self):
         GPIO.setwarnings(False)
@@ -25,6 +26,7 @@ class Control:
         self.flag=0x00
         self.timeout=0
         self.height=-25
+        self.seconds_to_sleep:Final[int]=30
         self.body_point=[[137.1 ,189.4 , self.height], [225, 0, self.height], [137.1 ,-189.4 , self.height], 
                          [-137.1 ,-189.4 , self.height], [-225, 0, self.height], [-137.1 ,189.4 , self.height]]
         self.calibration_leg_point=self.readFromTxt('point')
@@ -152,7 +154,7 @@ class Control:
         return flag
     def condition(self):
         while True:
-            if (time.time()-self.timeout)>10 and  self.timeout!=0 and self.order[0]=='':
+            if (time.time()-self.timeout)>self.seconds_to_sleep and  self.timeout!=0 and self.order[0]=='':
                 self.timeout=time.time()
                 self.relax(True)
                 self.flag=0x00
