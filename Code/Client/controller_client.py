@@ -10,6 +10,7 @@ class Controller_client:
     def __init__(self):
         # control parameters
         self.led_mode = 1
+        self.move_mode = 1
         self.speed = 10
         self.leftThumbValues = [0, 0]
         
@@ -31,7 +32,7 @@ class Controller_client:
         self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.LTHUMBY, self.callback_head_tilt)
         self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.RTHUMBX, self.callback_left_thumb_x)
         self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.RTHUMBY, self.callback_left_thumb_y)
-        # self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.options, self.callback_exit)
+        self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.options, self.callback_move_mode)
         
         try:
             # start the controller
@@ -118,27 +119,34 @@ class Controller_client:
         if value == 0:
             self.send_data("CMD_RELAX")
 
+    def callback_move_mode(self, value):
+        if value == 0:
+            if self.move_mode == 1:
+                self.move_mode = 2
+            else:
+                self.move_mode = 1
+            print("move_mode: {}".format(self.move_mode))
     
     def callback_move(self, value):
-        data = self.cat_move_cmd(1, value[0] * 35, value[1] * 35, self.speed, 0)
+        data = self.cat_move_cmd(self.move_mode, value[0] * 35, value[1] * 35, self.speed, 0)
         self.send_data(data)
         print(data)
         
     def callback_rotate_cw(self, value):
         speed = str(self.speed)
         if value == 0:
-            data = self.cat_move_cmd(1, 0, 0, speed, 0)
+            data = self.cat_move_cmd(self.move_mode, 0, 0, speed, 0)
         else:
-            data = self.cat_move_cmd(1, 35, 0, speed, 5)
+            data = self.cat_move_cmd(self.move_mode, 35, 0, speed, 5)
         self.send_data(data)
         print(data)
     
     def callback_rotate_ccw(self, value):
         speed = str(self.speed)
         if value == 0:
-            data = self.cat_move_cmd(1, 0, 0, speed, 0)
+            data = self.cat_move_cmd(self.move_mode, 0, 0, speed, 0)
         else:
-            data = self.cat_move_cmd(1, -35, 0, speed, -5)
+            data = self.cat_move_cmd(self.move_mode, -35, 0, speed, -5)
         self.send_data(data)
         print(data)
         
@@ -152,7 +160,7 @@ class Controller_client:
         
     def left_thumb_move(self):
         if self.leftThumbValues[0] == 0 and self.leftThumbValues[1] == 0:
-            data = self.cat_move_cmd(1, 0 , 0, self.speed, 0)
+            data = self.cat_move_cmd(self.move_mode, 0 , 0, self.speed, 0)
         else:
             angle = self.leftThumbValues[0]/(math.sqrt(self.leftThumbValues[0]**2 + self.leftThumbValues[1]**2))
             # print([angle, self.leftThumbValues[0], self.leftThumbValues[1]])
@@ -161,7 +169,7 @@ class Controller_client:
                 angle *= -1
             xValue = translate(self.leftThumbValues[0], -100, 100, -50, 50)
             yValue = translate(self.leftThumbValues[1], -100, 100, -50, 50)
-            data = self.cat_move_cmd(1, xValue, yValue, self.speed, angle)
+            data = self.cat_move_cmd(self.move_mode, xValue, yValue, self.speed, angle)
         self.send_data(data)
         print(data)
         
