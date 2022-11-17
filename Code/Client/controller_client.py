@@ -4,12 +4,14 @@ from Command import COMMAND as cmd
 import socket
 import struct
 import fcntl
+import math
 
 class Controller_client:
     def __init__(self):
         # control parameters
         self.led_mode = 1
         self.speed = 10
+        self.leftThumbValues = [0, 0]
         
         # start client socket
         self.turn_on_socket()
@@ -25,8 +27,10 @@ class Controller_client:
         self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.R2, self.callback_rotate_cw)
         self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.L1, self.callback_speed_down)
         self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.R1, self.callback_speed_up)
-        self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.RTHUMBX, self.callback_head_pan)
-        self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.RTHUMBY, self.callback_head_tilt)
+        self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.LTHUMBX, self.callback_head_pan)
+        self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.LTHUMBY, self.callback_head_tilt)
+        self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.RTHUMBX, self.callback_left_thumb_x)
+        self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.RTHUMBY, self.callback_left_thumb_y)
         # self.ps4Cont.setupControlCallback(self.ps4Cont.Ps4Controls.options, self.callback_exit)
         
         try:
@@ -135,6 +139,29 @@ class Controller_client:
             data = self.cat_move_cmd(1, 0, 0, speed, 0)
         else:
             data = self.cat_move_cmd(1, -35, 0, speed, -5)
+        self.send_data(data)
+        print(data)
+        
+    def callback_left_thumb_x(self, value):
+        self.leftThumbValues[0] = value
+        self.left_thumb_move()
+        
+    def callback_left_thumb_y(self, value):
+        self.leftThumbValues[1] = value
+        self.left_thumb_move()
+        
+    def left_thumb_move(self):
+        if self.leftThumbValues[0] == 0 and self.leftThumbValues[1] == 0:
+            data = self.cat_move_cmd(1, 0 , 0, self.speed, 0)
+        else:
+            angle = self.leftThumbValues[0]/(math.sqrt(self.leftThumbValues[0]**2 + self.leftThumbValues[1]**2))
+            print([angle, self.leftThumbValues[0], self.leftThumbValues[1]])
+            angle = translate(angle, -1, 1, -10, 10)/
+            if self.leftThumbValues[1] < 0:
+                angle *= -1
+            xValue = translate(self.leftThumbValues[0], -100, 100, -50, 50)
+            yValue = translate(self.leftThumbValues[1], -100, 100, -50, 50)
+            data = self.cat_move_cmd(1, xValue, yValue, self.speed, angle)
         self.send_data(data)
         print(data)
         
